@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { findEndpoints, scanOpenApiPaths, existsInSpec } from './drift';
+import { recordHit } from './reviewPrompt';
 
 let diagnostics: vscode.DiagnosticCollection;
 
@@ -36,7 +37,7 @@ async function findSpecText(collectionUri: vscode.Uri): Promise<string | null> {
   return null;
 }
 
-async function refresh(document: vscode.TextDocument): Promise<void> {
+async function refresh(context: vscode.ExtensionContext, document: vscode.TextDocument): Promise<void> {
   if (!basename(document.uri).endsWith('.postman_collection.json')) {
     diagnostics.delete(document.uri);
     return;
@@ -74,6 +75,7 @@ async function refresh(document: vscode.TextDocument): Promise<void> {
       vscode.DiagnosticSeverity.Warning,
     );
     diagnostic.source = 'Postman OpenAPI Drift Companion';
+    recordHit(context, `${document.uri.toString()}:${endpoint.method}:${endpoint.pathSegments.join('/')}`);
     return diagnostic;
   });
   diagnostics.set(document.uri, result);
@@ -83,11 +85,11 @@ export function activate(context: vscode.ExtensionContext): void {
   diagnostics = vscode.languages.createDiagnosticCollection('postmanOpenApiDriftCompanion');
   context.subscriptions.push(diagnostics);
 
-  vscode.workspace.textDocuments.forEach((doc) => void refresh(doc));
+  vscode.workspace.textDocuments.forEach((doc) => void refresh(context, doc));
 
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument((doc) => void refresh(doc)),
-    vscode.workspace.onDidChangeTextDocument((event) => void refresh(event.document)),
+    vscode.workspace.onDidOpenTextDocument((doc) => void refresh(context, doc)),
+    vscode.workspace.onDidChangeTextDocument((event) => void refresh(context, event.document)),
     vscode.workspace.onDidCloseTextDocument((document) => diagnostics.delete(document.uri)),
   );
 }

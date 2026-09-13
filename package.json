@@ -2,7 +2,7 @@
   "name": "postman-openapi-drift-companion",
   "displayName": "Postman OpenAPI Drift Companion",
   "description": "Warns on a Postman collection endpoint whose method+path no longer exists in the project's OpenAPI/Swagger spec. No data leaves your editor.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "GapHunterLabs",
   "icon": "images/icon.png",
   "license": "Apache-2.0",
